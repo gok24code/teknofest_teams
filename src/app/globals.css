@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy-950: #0a1426;
+  --color-navy-900: #14284a;
+  --color-navy-800: #1c355e;
+  --color-navy-700: #2a4a7c;
+  --color-navy-600: #3a5f99;
+  --color-navy-100: #e3e9f3;
+  --color-navy-50: #f4f7fb;
+  --color-accent-300: #ff9ea3;
+  --color-accent-400: #f5565e;
+  --color-accent-500: #e30a17;
+  --color-accent-600: #c20813;
+  --color-accent-700: #9a0710;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background: var(--color-navy-50);
+    color: var(--color-navy-900);
+  }
+}
+
+@utility bg-accent-gradient {
+  background-image: linear-gradient(135deg, #c20813 0%, #e30a17 50%, #f5565e 100%);
+}
+
+@utility bg-navy-gradient {
+  background-image: linear-gradient(160deg, #0a1426 0%, #14284a 55%, #1c355e 100%);
+}
+
+@utility text-accent-gradient {
+  background-image: linear-gradient(135deg, #ff9ea3 0%, #ffffff 50%, #ff7b82 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+@utility btn {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+@utility btn-accent {
+  @apply btn bg-accent-gradient text-white shadow-sm hover:brightness-105 hover:shadow-md;
+}
+
+@utility btn-navy {
+  @apply btn bg-navy-800 text-white hover:bg-navy-700;
+}
+
+@utility btn-ghost {
+  @apply btn border border-navy-100 bg-white text-navy-800 hover:border-accent-500 hover:text-navy-950;
+}
+
+@utility btn-danger {
+  @apply btn border border-red-200 bg-white text-red-700 hover:bg-red-50;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-navy-100 bg-white shadow-sm;
+  }
+  .input {
+    @apply w-full rounded-lg border border-navy-100 bg-white px-3 py-2 text-sm text-navy-900 outline-none transition placeholder:text-navy-900/40 focus:border-accent-500 focus:ring-2 focus:ring-accent-400/40;
+  }
+  .label {
+    @apply mb-1 block text-xs font-semibold tracking-wide text-navy-700 uppercase;
+  }
+  .table {
+    @apply w-full text-left text-sm;
+  }
+  .table th {
+    @apply border-b border-navy-100 bg-navy-50 px-4 py-3 text-xs font-semibold tracking-wide text-navy-700 uppercase;
+  }
+  .table td {
+    @apply border-b border-navy-100/70 px-4 py-3 align-middle;
+  }
+  .table tr:last-child td {
+    @apply border-b-0;
+  }
+}
