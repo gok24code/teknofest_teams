@@ -7,7 +7,6 @@ interface Row {
   key: number;
   fullName: string;
   studentNo: string;
-  email: string;
   phone: string;
   department: string;
   unit: string;
@@ -16,17 +15,16 @@ interface Row {
 
 type Field = Exclude<keyof Row, "key">;
 
-const COLUMNS: { field: Field; label: string; placeholder: string; type?: string; inputMode?: "numeric" | "email" | "tel"; max: number; select?: boolean }[] = [
+const COLUMNS: { field: Field; label: string; placeholder: string; type?: string; inputMode?: "numeric" | "tel"; max: number; select?: boolean }[] = [
   { field: "fullName", label: "Ad Soyad *", placeholder: "Ayşe Yılmaz", max: 100 },
   { field: "studentNo", label: "Öğrenci No", placeholder: "2101001", inputMode: "numeric", max: 30 },
-  { field: "email", label: "E-posta", placeholder: "ayse@ornek.edu.tr", type: "email", inputMode: "email", max: 120 },
   { field: "phone", label: "Telefon", placeholder: "0555 111 22 33", type: "tel", inputMode: "tel", max: 30 },
   { field: "department", label: "Bölüm", placeholder: "Bilgisayar Müh.", max: 100 },
   { field: "unit", label: "Birim *", placeholder: "", max: 20, select: true },
   { field: "duty", label: "Uygulama planındaki görevi", placeholder: "ör. Görüntü işleme modülü", max: 500 },
 ];
 
-const GRID = "md:grid-cols-[1.3fr_0.8fr_1.2fr_0.9fr_1fr_0.9fr_1.5fr_36px]";
+const GRID = "md:grid-cols-[1.3fr_0.8fr_0.9fr_1fr_0.9fr_1.5fr_36px]";
 
 /** Yapıştırılan "Yazılım", "yazilim" gibi değerleri birim koduna çevirir. */
 const toUnit = (v: string): string => {
@@ -34,10 +32,9 @@ const toUnit = (v: string): string => {
   return isUnit(n) ? n : "";
 };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HEADER = /^(ad|ad soyad|adı soyadı|isim|name|no|numara|öğrenci no|ogrenci no|birim)$/i;
 
-const emptyRow = (key: number): Row => ({ key, fullName: "", studentNo: "", email: "", phone: "", department: "", unit: "", duty: "" });
+const emptyRow = (key: number): Row => ({ key, fullName: "", studentNo: "", phone: "", department: "", unit: "", duty: "" });
 const initial = (n: number) => Array.from({ length: n }, (_, i) => emptyRow(i));
 const isEmpty = (r: Row) => COLUMNS.every((c) => !r[c.field].trim());
 
@@ -46,7 +43,6 @@ function rowErrors(r: Row): Partial<Record<Field, string>> {
   const e: Partial<Record<Field, string>> = {};
   if (!r.fullName.trim()) e.fullName = "Ad soyad gerekli";
   if (!r.unit) e.unit = "Birim seçin";
-  if (r.email.trim() && !EMAIL.test(r.email.trim())) e.email = "Geçersiz e-posta";
   return e;
 }
 
@@ -98,7 +94,7 @@ export function MembersInput({ required = false, initialRows = 3 }: { required?:
   }, [validityMessage]);
 
   const payload = JSON.stringify(
-    filled.map(({ fullName, studentNo, email, phone, department, unit, duty }) => ({ fullName, studentNo, email, phone, department, unit, duty })),
+    filled.map(({ fullName, studentNo, phone, department, unit, duty }) => ({ fullName, studentNo, phone, department, unit, duty })),
   );
 
   const update = (key: number, field: Field, value: string) =>
@@ -167,7 +163,7 @@ export function MembersInput({ required = false, initialRows = 3 }: { required?:
                 <span className="text-xs font-semibold text-navy-700/60">{idx + 1}. kişi</span>
               </div>
               {COLUMNS.map((c) => (
-                <div key={c.field} className={c.field === "fullName" || c.field === "email" || c.field === "duty" ? "col-span-2 md:col-span-1" : ""}>
+                <div key={c.field} className={c.field === "fullName" || c.field === "duty" ? "col-span-2 md:col-span-1" : ""}>
                   <label className="label md:sr-only" htmlFor={`p-${r.key}-${c.field}`}>{c.label}</label>
                   {c.select ? (
                     <select

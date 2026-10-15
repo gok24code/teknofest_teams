@@ -12,7 +12,7 @@ Teknoloji: Next.js (App Router, Server Actions) · Tailwind CSS · Cloudflare R2
 ## Veri modeli
 
 - **Takım:** ad, kaptan, danışman hoca, Teknofest kategorisi, kaptan şifresi, devamsızlık sınırı.
-- **Üye:** ad soyad, öğrenci no, e-posta, telefon, bölüm, **birim** (yazılım / donanım / elektronik / mekanik / diğer) ve **uygulama planındaki görevi**.
+- **Üye:** ad soyad, öğrenci no, telefon, bölüm, **birim** (yazılım / donanım / elektronik / mekanik / diğer) ve **uygulama planındaki görevi**.
 - **Haftalık rapor:** hafta, tarih, özet, her üye için katılım durumu ve **o hafta yaptığı işin notu**.
 
 ## Güvenlik
@@ -66,6 +66,6 @@ npm run dev
 ## Kullanım
 
 1. `/admin` → **Takımlar**: takım oluşturun (danışman hoca ve kategori dahil). Şifre alanını boş bırakırsanız güçlü bir şifre üretilir; takım adı ve şifreyi kaptana iletin.
-2. Üyeleri girin: her üye için **birim** seçin ve **görevini** yazın. Excel'den `numara, ad soyad, e-posta, telefon, bölüm, birim, görev` sütunlarını yapıştırabilirsiniz.
+2. Üyeleri girin: her üye için **birim** seçin ve **görevini** yazın. Excel'den `ad soyad, numara, telefon, bölüm, birim, görev` sütunlarını yapıştırabilirsiniz.
 3. Kaptan telefondan giriş yapar, her hafta **“N. hafta raporunu gir”** ile katılımı işaretler ve her üyenin o hafta yaptığı işi yazar.
 4. Danışman hoca takım sayfasında birimlere göre görev dağılımını ve haftalık notları, üye sayfasında kişinin tüm haftalarını görür. CSV çıktısı birim, görev ve haftalık notları da içerir.

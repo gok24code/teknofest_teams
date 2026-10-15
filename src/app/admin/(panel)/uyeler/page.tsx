@@ -63,7 +63,9 @@ export default async function AllMembersPage({
               {people.map(({ key, person, entries, totalAbsences, totalExcused, overLimit }) => (
                 <tr key={key} className={overLimit ? "bg-red-50/60" : undefined}>
                   <td>
-                    <div className="font-semibold">{person.fullName}</div>
+                    <Link href={`/admin/takimlar/${person.teamId}/uye/${person.id}`} className="font-semibold hover:text-accent-600 hover:underline">
+                      {person.fullName}
+                    </Link>
                     <div className="text-xs text-navy-700/60">{[person.studentNo, person.department].filter(Boolean).join(" · ") || "—"}</div>
                   </td>
                   <td className="text-xs">
