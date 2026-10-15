@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { captainAssignTasks, captainDeleteTask } from "@/app/actions/captain";
+import { TaskAssignForm } from "@/components/AdminTasks";
+import { ConfirmForm } from "@/components/forms";
 import { Empty, StatCard } from "@/components/ui";
 import { requireCaptain } from "@/lib/auth";
 import { TASK_STATUS_LABELS, UNIT_LABELS, taskStatus, type Task } from "@/lib/types";
@@ -27,6 +30,9 @@ export default async function CaptainHome() {
         <span className="shrink-0 text-sm font-bold tabular-nums text-navy-800">%{t.progress}</span>
       </div>
       {t.completionNote && <div className="text-xs italic text-navy-700/70">{t.completionNote}</div>}
+      <ConfirmForm action={captainDeleteTask} hidden={{ id: t.id }} message="Görev silinsin mi?" className="text-xs font-semibold text-red-600 hover:underline">
+        Sil
+      </ConfirmForm>
     </div>
   );
 
@@ -49,6 +55,18 @@ export default async function CaptainHome() {
           <StatCard label="Tamamlanan" value={ts.done} />
           <StatCard accent label="İlerleme" value={pct(ts.progress)} />
         </div>
+        <details className="card mb-3 p-4">
+          <summary className="cursor-pointer font-semibold text-accent-700">Görev ata</summary>
+          <div className="mt-4">
+            <TaskAssignForm
+              action={captainAssignTasks}
+              targets={[
+                { value: "team", label: "Takımın tüm üyeleri" },
+                ...students.map((m) => ({ value: `member:${m.id}`, label: m.fullName })),
+              ]}
+            />
+          </div>
+        </details>
         {tasks.length === 0 ? (
           <Empty>Takıma henüz görev atanmadı.</Empty>
         ) : (

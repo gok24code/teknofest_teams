@@ -19,7 +19,7 @@ Teknoloji: Next.js (App Router, Server Actions) · Tailwind CSS · Cloudflare R2
 
 - **Admin oturumu:** `.env` içindeki `ADMIN_PASSWORD` ile açılır. Oturum sunucuda kayıtlıdır, açıldığı tarayıcıya bağlıdır ve `ADMIN_SESSION_MINUTES` (varsayılan 120 dk) sonunda biter. *Oturumlar* sayfasından kapatılabilir. Çerez `httpOnly`, `Secure`, `SameSite=Strict`, yalnızca `/admin` yoluna gönderilir.
 - **Kaptan oturumu:** Süresizdir. Admin o takımın şifresini değiştirdiği anda tüm açık kaptan oturumları geçersiz olur. Takım arşivlenir veya silinirse de oturum düşer.
-- **Kaptan yetkisi:** Yalnızca kendi takımında haftalık rapor girmek/düzeltmek. Üye ekleyemez, rapor silemez, *İzinli* giremez; takım kimliği istemciden değil imzalı oturumdan alınır.
+- **Kaptan yetkisi:** Yalnızca kendi takımında haftalık rapor girmek/düzeltmek ve takım üyelerine görev atamak/silmek. Üye ekleyemez, rapor silemez, *İzinli* giremez; takım kimliği istemciden değil imzalı oturumdan alınır.
 - **Şifreler:** Takım şifreleri bcrypt ile saklanır, geri okunamaz; oluşturulurken bir kez gösterilir.
 - **Kaba kuvvet koruması:** Aynı IP'den 15 dk içinde 5 hatalı giriş → 15 dk kilit (admin ve kaptan girişi ayrı ayrı).
 - **Diğer:** HSTS, clickjacking koruması, `nosniff`, `noindex`, kişisel veri içeren sayfalarda `no-store`, CSV'de Excel formül enjeksiyonu koruması.

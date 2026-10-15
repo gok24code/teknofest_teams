@@ -1,4 +1,5 @@
 import { assignTasks, deleteTask, updateTask } from "@/app/actions/admin";
+import type { FormState } from "@/lib/forms";
 import { formatDate } from "@/lib/stats";
 import { TASK_STATUS_LABELS, taskStatus, type Task } from "@/lib/types";
 import { ActionForm, ConfirmForm, SubmitButton } from "./forms";
@@ -10,12 +11,14 @@ import { ActionForm, ConfirmForm, SubmitButton } from "./forms";
 export function TaskAssignForm({
   targets,
   fixedTarget,
+  action = assignTasks,
 }: {
   targets?: { value: string; label: string }[];
   fixedTarget?: string;
+  action?: (state: FormState, fd: FormData) => Promise<FormState>;
 }) {
   return (
-    <ActionForm action={assignTasks} resetOnSuccess className="grid gap-4 sm:grid-cols-2">
+    <ActionForm action={action} resetOnSuccess className="grid gap-4 sm:grid-cols-2">
       {fixedTarget ? (
         <input type="hidden" name="target" value={fixedTarget} />
       ) : (
