@@ -10,7 +10,7 @@ import { requireAdmin } from "@/lib/auth";
 import { readDb } from "@/lib/db";
 import { StatusDot } from "@/components/ui";
 import { UNIT_LABELS } from "@/lib/types";
-import { formatDate, nextWeek, membersOf, pct, sessionsOf, taskSummary, tasksOfTeam, teamStats, unitGroups } from "@/lib/stats";
+import { formatDate, nextWeek, membersOf, pct, sessionsOf, taskSummary, tasksOfTeam, teamStats } from "@/lib/stats";
 
 export default async function AdminTeamPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -55,30 +55,6 @@ export default async function AdminTeamPage({ params }: { params: Promise<{ id: 
         <StatCard label="Toplam görev" value={ts.total} />
         <StatCard accent label="Genel ilerleme" value={pct(ts.progress)} hint="görevlerin ortalaması" />
       </div>
-
-      <h2 className="mb-3 text-lg font-bold">Birimler ve uygulama planındaki görevler</h2>
-      {members.length === 0 ? (
-        <p className="mb-8 text-sm text-navy-700/60">Henüz üye girilmedi.</p>
-      ) : (
-        <div className="mb-8 grid gap-4 md:grid-cols-2">
-          {unitGroups(members).map((g) => (
-            <div key={g.unit} className="card p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="font-bold text-accent-700">{g.label}</h3>
-                <span className="text-xs font-semibold text-navy-700/60">{g.members.length} üye</span>
-              </div>
-              <ul className="divide-y divide-navy-100">
-                {g.members.map((m) => (
-                  <li key={m.id} className="py-2">
-                    <Link href={`/admin/takimlar/${team.id}/uye/${m.id}`} className="font-semibold hover:underline">{m.fullName}</Link>
-                    <div className="text-sm text-navy-700/70">{m.duty || <span className="italic text-navy-700/40">Görev girilmemiş</span>}</div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
 
       <h2 className="mb-3 text-lg font-bold">Görevler</h2>
       <div className="mb-8 grid gap-4 lg:grid-cols-2">
