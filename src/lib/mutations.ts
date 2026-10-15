@@ -1,7 +1,7 @@
 import "server-only";
 import { randomInt } from "crypto";
 import { newId, now } from "./db";
-import { isPriority, isUnit, type AttendanceStatus, type Database, type Priority, type SaveSessionInput, type Task, type Unit } from "./types";
+import { isUnit, type AttendanceStatus, type Database, type SaveSessionInput, type Task, type Unit } from "./types";
 
 export type { SaveSessionInput };
 
@@ -203,19 +203,17 @@ export function generatePassword(length = 10): string {
 export interface TaskInput {
   title: string;
   description?: string;
-  priority: string;
 }
 
 export type TaskTarget = { kind: "member"; memberId: string } | { kind: "team"; teamId: string } | { kind: "all" };
 
-function validateTask(input: TaskInput): { title: string; description?: string; priority: Priority } {
+function validateTask(input: TaskInput): { title: string; description?: string } {
   const title = String(input.title ?? "").trim();
   const description = String(input.description ?? "").trim();
   if (!title) throw new UserError("Görev başlığı gerekli.");
   if (title.length > 150) throw new UserError("Görev başlığı en fazla 150 karakter olabilir.");
   if (description.length > 1000) throw new UserError("Açıklama en fazla 1000 karakter olabilir.");
-  if (!isPriority(input.priority)) throw new UserError("Geçerli bir öncelik seçin.");
-  return { title, description: description || undefined, priority: input.priority };
+  return { title, description: description || undefined };
 }
 
 /** Hedef kapsamdaki (arşivlenmemiş takımlardaki) üyelere birer görev atar; atanan sayısını döner. */

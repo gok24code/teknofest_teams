@@ -183,7 +183,7 @@ export async function destroyCaptainSession(): Promise<void> {
 /* ------------------------------------------------------------------ */
 
 export async function createMemberSession(member: Member, team: Team): Promise<void> {
-  const token = await new SignJWT({ mid: member.id, v: team.passwordVersion })
+  const token = await new SignJWT({ mid: member.id, v: team.memberPasswordVersion ?? 0 })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuer(ISSUER)
     .setAudience(MEMBER_AUD)
@@ -206,7 +206,7 @@ export async function getMember() {
   const db = await readDb();
   const member = db.members.find((m) => m.id === payload.mid);
   const team = member && db.teams.find((w) => w.id === member.teamId);
-  if (!member || !team || team.archived || team.passwordVersion !== payload.v) return null;
+  if (!member || !team || team.archived || (team.memberPasswordVersion ?? 0) !== payload.v) return null;
   return { member, team, db };
 }
 

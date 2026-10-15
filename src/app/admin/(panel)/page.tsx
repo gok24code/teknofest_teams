@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { readDb } from "@/lib/db";
-import { formatDate, pct, personOverviews, teamStats } from "@/lib/stats";
+import { formatDate, pct, personOverviews, taskSummary, teamStats } from "@/lib/stats";
 import { AbsenceBadge, Empty, PageHeader, RateBar, StatCard } from "@/components/ui";
 
 export default async function AdminHome() {
   await requireAdmin();
   const db = await readDb();
   const active = db.teams.filter((w) => !w.archived);
-  const wStats = active.map((w) => ({ w, s: teamStats(db, w) }));
+  const wStats = active.map((w) => ({ w, s: teamStats(db, w), t: taskSummary(db.tasks.filter((x) => x.teamId === w.id)) }));
 
   let present = 0;
   let absent = 0;
@@ -44,7 +44,7 @@ export default async function AdminHome() {
           <Link href="/admin/takimlar" className="text-sm font-semibold text-navy-600 hover:text-accent-600">Tümü →</Link>
         </div>
         {wStats.length === 0 ? (
-          <Empty>Henüz aktif team yok. <Link className="font-semibold text-accent-700" href="/admin/takimlar">Takım oluşturun</Link>.</Empty>
+          <Empty>Henüz aktif takım yok. <Link className="font-semibold text-accent-700" href="/admin/takimlar">Takım oluşturun</Link>.</Empty>
         ) : (
           <div className="card overflow-x-auto">
             <table className="table">
@@ -56,11 +56,14 @@ export default async function AdminHome() {
                   <th className="text-center">Hafta</th>
                   <th className="text-center">Devamsızlık</th>
                   <th>Katılım</th>
+                  <th className="text-center">Bekleyen görev</th>
+                  <th className="text-center">Tamamlanan görev</th>
+                  <th>Görev ilerleme</th>
                   <th className="text-center">Sınır aşan</th>
                 </tr>
               </thead>
               <tbody>
-                {wStats.map(({ w, s }) => (
+                {wStats.map(({ w, s, t }) => (
                   <tr key={w.id}>
                     <td><Link href={`/admin/takimlar/${w.id}`} className="font-semibold hover:text-accent-600">{w.title}</Link></td>
                     <td className="text-navy-700/80">{w.captainName || "—"}</td>
@@ -68,6 +71,9 @@ export default async function AdminHome() {
                     <td className="text-center tabular-nums">{s.sessionCount}</td>
                     <td className="text-center tabular-nums">{s.totalAbsences}</td>
                     <td><RateBar rate={s.rate} /></td>
+                    <td className="text-center tabular-nums">{t.pending + t.inProgress}</td>
+                    <td className="text-center tabular-nums">{t.done}</td>
+                    <td>{t.total ? <RateBar rate={t.progress} /> : <span className="text-navy-700/40">—</span>}</td>
                     <td className="text-center">
                       <span className={s.overLimit ? "font-bold text-red-600" : "text-navy-700/50"}>{s.overLimit}</span>
                     </td>

@@ -173,16 +173,19 @@ export function taskSummary(tasks: Task[]): TaskSummary {
   };
 }
 
-/** Üyenin görevleri: önce tamamlanmayanlar (yüksek öncelik üstte), sonra tamamlananlar (en yeni üstte). */
-export function tasksOfMember(db: Database, memberId: string): Task[] {
-  const rank = { high: 0, medium: 1, low: 2 } as const;
-  return db.tasks
-    .filter((t) => t.memberId === memberId)
-    .sort((a, b) =>
-      a.done !== b.done
-        ? Number(a.done) - Number(b.done)
-        : a.done
-          ? (b.completedAt ?? "").localeCompare(a.completedAt ?? "")
-          : rank[a.priority] - rank[b.priority] || b.assignedAt.localeCompare(a.assignedAt),
-    );
+/** Görevleri sıralar: önce tamamlanmayanlar (en yeni üstte), sonra tamamlananlar (en son tamamlanan üstte). */
+export function sortTasks(tasks: Task[]): Task[] {
+  return [...tasks].sort((a, b) =>
+    a.done !== b.done
+      ? Number(a.done) - Number(b.done)
+      : a.done
+        ? (b.completedAt ?? "").localeCompare(a.completedAt ?? "")
+        : b.assignedAt.localeCompare(a.assignedAt),
+  );
 }
+
+export const tasksOfMember = (db: Database, memberId: string): Task[] =>
+  sortTasks(db.tasks.filter((t) => t.memberId === memberId));
+
+export const tasksOfTeam = (db: Database, teamId: string): Task[] =>
+  sortTasks(db.tasks.filter((t) => t.teamId === teamId));

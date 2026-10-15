@@ -134,6 +134,22 @@ export async function resetTeamPassword(_: FormState, fd: FormData): Promise<For
   });
 }
 
+/** Üye girişi için ortak şifreyi belirler ve o takımdaki tüm açık üye oturumlarını kapatır. Kaptan şifresinden bağımsızdır. */
+export async function resetMemberPassword(_: FormState, fd: FormData): Promise<FormState> {
+  return run(async () => {
+    const id = str(fd, "id");
+    const password = passwordFrom(fd);
+    const memberPasswordHash = await bcrypt.hash(password, 12);
+    await mutateDb((db) => {
+      const w = db.teams.find((x) => x.id === id);
+      if (!w) throw new UserError("Takım bulunamadı.");
+      w.memberPasswordHash = memberPasswordHash;
+      w.memberPasswordVersion = (w.memberPasswordVersion ?? 0) + 1;
+    });
+    return { ok: "Üye şifresi belirlendi, üyelerin açık oturumları kapatıldı. Şifre bir daha gösterilmeyecek.", secret: password };
+  });
+}
+
 export async function deleteTeam(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = str(fd, "id");
@@ -219,7 +235,6 @@ function parseTarget(raw: string): TaskTarget {
 const taskFields = (fd: FormData) => ({
   title: str(fd, "title", 150),
   description: str(fd, "description", 1000),
-  priority: str(fd, "priority", 10),
 });
 
 export async function assignTasks(_: FormState, fd: FormData): Promise<FormState> {

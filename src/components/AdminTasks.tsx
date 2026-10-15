@@ -1,18 +1,7 @@
 import { assignTasks, deleteTask, updateTask } from "@/app/actions/admin";
 import { formatDate } from "@/lib/stats";
-import { PRIORITIES, PRIORITY_LABELS, TASK_STATUS_LABELS, taskStatus, type Task } from "@/lib/types";
+import { TASK_STATUS_LABELS, taskStatus, type Task } from "@/lib/types";
 import { ActionForm, ConfirmForm, SubmitButton } from "./forms";
-import { PriorityBadge } from "./ui";
-
-function PrioritySelect({ defaultValue = "medium" }: { defaultValue?: string }) {
-  return (
-    <select name="priority" defaultValue={defaultValue} className="input" required aria-label="Öncelik">
-      {PRIORITIES.map((p) => (
-        <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>
-      ))}
-    </select>
-  );
-}
 
 /**
  * Görev atama formu. `targets` verilirse hedef seçici gösterilir; yoksa
@@ -40,13 +29,9 @@ export function TaskAssignForm({
           </select>
         </div>
       )}
-      <div>
+      <div className="sm:col-span-2">
         <label className="label" htmlFor="title">Başlık *</label>
         <input id="title" name="title" required maxLength={150} className="input" />
-      </div>
-      <div>
-        <label className="label" htmlFor="priority">Öncelik *</label>
-        <PrioritySelect />
       </div>
       <div className="sm:col-span-2">
         <label className="label" htmlFor="description">Açıklama</label>
@@ -63,15 +48,12 @@ export function AdminTaskItem({ task, owner }: { task: Task; owner?: React.React
   const bar = task.done ? "bg-emerald-500" : "bg-accent-500";
   return (
     <li className="space-y-2 py-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="font-semibold">{task.title}</div>
-          <div className="text-xs text-navy-700/60">
-            {owner}{owner ? " · " : ""}Atanma: {formatDate(task.assignedAt)} · {TASK_STATUS_LABELS[status]}
-            {task.completedAt ? ` (${formatDate(task.completedAt)})` : ""}
-          </div>
+      <div className="min-w-0">
+        <div className="font-semibold">{task.title}</div>
+        <div className="text-xs text-navy-700/60">
+          {owner}{owner ? " · " : ""}Atanma: {formatDate(task.assignedAt)} · {TASK_STATUS_LABELS[status]}
+          {task.completedAt ? ` (${formatDate(task.completedAt)})` : ""}
         </div>
-        <PriorityBadge priority={task.priority} />
       </div>
       {task.description && <p className="text-sm whitespace-pre-line text-navy-700/80">{task.description}</p>}
       <div className="flex items-center gap-2">
@@ -86,8 +68,7 @@ export function AdminTaskItem({ task, owner }: { task: Task; owner?: React.React
         <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_auto]">
           <ActionForm action={updateTask} className="grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="id" value={task.id} />
-            <input name="title" defaultValue={task.title} required maxLength={150} className="input" aria-label="Başlık" />
-            <PrioritySelect defaultValue={task.priority} />
+            <input name="title" defaultValue={task.title} required maxLength={150} className="input sm:col-span-2" aria-label="Başlık" />
             <textarea name="description" rows={2} defaultValue={task.description} maxLength={1000} className="input sm:col-span-2" aria-label="Açıklama" />
             <div className="sm:col-span-2"><SubmitButton>Kaydet</SubmitButton></div>
           </ActionForm>

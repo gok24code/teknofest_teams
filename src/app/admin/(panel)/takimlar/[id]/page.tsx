@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addMembersToTeam, deleteMember, deleteTeam, resetTeamPassword, updateTeam } from "@/app/actions/admin";
+import { addMembersToTeam, deleteMember, deleteTeam, resetMemberPassword, resetTeamPassword, updateTeam } from "@/app/actions/admin";
 import { AttendanceMatrix } from "@/components/AttendanceMatrix";
 import { ActionForm, ConfirmForm, SubmitButton } from "@/components/forms";
+import { AdminTaskItem, TaskAssignForm } from "@/components/AdminTasks";
 import { MembersInput } from "@/components/MembersInput";
 import { PageHeader, StatCard } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { readDb } from "@/lib/db";
 import { StatusDot } from "@/components/ui";
 import { UNIT_LABELS } from "@/lib/types";
-import { formatDate, nextWeek, membersOf, pct, sessionsOf, teamStats, unitGroups } from "@/lib/stats";
+import { formatDate, nextWeek, membersOf, pct, sessionsOf, taskSummary, tasksOfTeam, teamStats, unitGroups } from "@/lib/stats";
 
 export default async function AdminTeamPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -21,6 +22,11 @@ export default async function AdminTeamPage({ params }: { params: Promise<{ id: 
   const members = membersOf(db, team.id);
   const sessions = sessionsOf(db, team.id);
   const stats = teamStats(db, team);
+  const tasks = tasksOfTeam(db, team.id);
+  const ts = taskSummary(tasks);
+  const open = tasks.filter((t) => !t.done);
+  const completed = tasks.filter((t) => t.done);
+  const memberName = new Map(members.map((m) => [m.id, m.fullName]));
 
   return (
     <>
@@ -41,6 +47,13 @@ export default async function AdminTeamPage({ params }: { params: Promise<{ id: 
         <StatCard label="Haftalık rapor" value={stats.sessionCount} hint="girilen hafta" />
         <StatCard label="Toplam devamsızlık" value={stats.totalAbsences} />
         <StatCard accent label="Katılım oranı" value={pct(stats.rate)} hint={`${stats.overLimit} üye sınırı aştı`} />
+      </div>
+
+      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard label="Bekleyen görev" value={ts.pending + ts.inProgress} hint={`${ts.inProgress} tanesi devam ediyor`} />
+        <StatCard label="Tamamlanan görev" value={ts.done} />
+        <StatCard label="Toplam görev" value={ts.total} />
+        <StatCard accent label="Genel ilerleme" value={pct(ts.progress)} hint="görevlerin ortalaması" />
       </div>
 
       <h2 className="mb-3 text-lg font-bold">Birimler ve uygulama planındaki görevler</h2>
@@ -66,6 +79,38 @@ export default async function AdminTeamPage({ params }: { params: Promise<{ id: 
           ))}
         </div>
       )}
+
+      <h2 className="mb-3 text-lg font-bold">Görevler</h2>
+      <div className="mb-8 grid gap-4 lg:grid-cols-2">
+        <div className="card p-5">
+          <h3 className="mb-2 font-bold">Bekleyen ({open.length})</h3>
+          {open.length === 0 ? (
+            <p className="text-sm text-navy-700/60">Bekleyen görev yok.</p>
+          ) : (
+            <ul className="divide-y divide-navy-100">
+              {open.map((t) => (
+                <AdminTaskItem key={t.id} task={t} owner={<span className="font-semibold text-navy-800">{memberName.get(t.memberId) ?? "?"}</span>} />
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="card p-5">
+          <h3 className="mb-2 font-bold">Tamamlanan ({completed.length})</h3>
+          {completed.length === 0 ? (
+            <p className="text-sm text-navy-700/60">Henüz tamamlanan görev yok.</p>
+          ) : (
+            <ul className="divide-y divide-navy-100">
+              {completed.map((t) => (
+                <AdminTaskItem key={t.id} task={t} owner={<span className="font-semibold text-navy-800">{memberName.get(t.memberId) ?? "?"}</span>} />
+              ))}
+            </ul>
+          )}
+        </div>
+        <details className="card p-5 lg:col-span-2">
+          <summary className="cursor-pointer font-semibold text-accent-700">Takımın tüm üyelerine görev ata</summary>
+          <div className="mt-4"><TaskAssignForm fixedTarget={`team:${team.id}`} /></div>
+        </details>
+      </div>
 
       <h2 className="mb-1 text-lg font-bold">Hafta hafta katılım</h2>
       <p className="mb-3 text-xs text-navy-700/60">Düzenlemek için hafta başlığına tıklayın. Yeşil: geldi · Kırmızı: gelmedi · Sarı: izinli</p>
@@ -137,6 +182,19 @@ export default async function AdminTeamPage({ params }: { params: Promise<{ id: 
             <input type="hidden" name="id" value={team.id} />
             <input name="password" type="text" className="input min-w-0 flex-1" placeholder="Boş → otomatik üret" autoComplete="off" maxLength={200} />
             <SubmitButton className="btn-navy">Yeni şifre</SubmitButton>
+          </ActionForm>
+        </div>
+
+        <div className="card p-5">
+          <h2 className="mb-1 text-lg font-bold">Üye şifresi</h2>
+          <p className="mb-4 text-sm text-navy-700/60">
+            Takımın tüm üyelerinin ortak şifresidir (okul numarasıyla birlikte girilir); kaptan şifresinden bağımsızdır.
+            {team.memberPasswordHash ? " Yeni şifre belirlendiğinde üyelerin açık oturumları kapanır." : " Henüz belirlenmedi; belirlenene kadar üyeler giriş yapamaz."}
+          </p>
+          <ActionForm action={resetMemberPassword} resetOnSuccess className="flex flex-wrap gap-2">
+            <input type="hidden" name="id" value={team.id} />
+            <input name="password" type="text" className="input min-w-0 flex-1" placeholder="Boş → otomatik üret" autoComplete="off" maxLength={200} />
+            <SubmitButton className="btn-navy">{team.memberPasswordHash ? "Yeni şifre" : "Şifre belirle"}</SubmitButton>
           </ActionForm>
         </div>
 

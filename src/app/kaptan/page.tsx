@@ -1,14 +1,34 @@
 import Link from "next/link";
 import { Empty, StatCard } from "@/components/ui";
 import { requireCaptain } from "@/lib/auth";
-import { UNIT_LABELS } from "@/lib/types";
-import { formatDate, nextWeek, pct, sessionsOf, membersOf, memberStats, teamStats } from "@/lib/stats";
+import { TASK_STATUS_LABELS, UNIT_LABELS, taskStatus, type Task } from "@/lib/types";
+import { formatDate, nextWeek, pct, sessionsOf, membersOf, memberStats, taskSummary, tasksOfTeam, teamStats } from "@/lib/stats";
 
 export default async function CaptainHome() {
   const { team, db } = await requireCaptain();
   const sessions = sessionsOf(db, team.id);
   const students = membersOf(db, team.id);
   const stats = teamStats(db, team);
+  const tasks = tasksOfTeam(db, team.id);
+  const ts = taskSummary(tasks);
+  const open = tasks.filter((t) => !t.done);
+  const completed = tasks.filter((t) => t.done);
+  const names = new Map(students.map((m) => [m.id, m.fullName]));
+
+  const taskRow = (t: Task) => (
+    <div key={t.id} className="space-y-1 px-4 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="truncate font-semibold">{t.title}</div>
+          <div className="truncate text-xs text-navy-700/60">
+            {names.get(t.memberId) ?? "?"} · Atanma: {formatDate(t.assignedAt)} · {TASK_STATUS_LABELS[taskStatus(t)]}
+          </div>
+        </div>
+        <span className="shrink-0 text-sm font-bold tabular-nums text-navy-800">%{t.progress}</span>
+      </div>
+      {t.completionNote && <div className="text-xs italic text-navy-700/70">{t.completionNote}</div>}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -21,6 +41,33 @@ export default async function CaptainHome() {
         <StatCard label="Hafta" value={stats.sessionCount} />
         <StatCard accent label="Katılım" value={pct(stats.rate)} />
       </div>
+
+      <section>
+        <h2 className="mb-3 text-base font-bold text-navy-900">Takım görevleri</h2>
+        <div className="mb-3 grid grid-cols-3 gap-3">
+          <StatCard label="Bekleyen" value={ts.pending + ts.inProgress} />
+          <StatCard label="Tamamlanan" value={ts.done} />
+          <StatCard accent label="İlerleme" value={pct(ts.progress)} />
+        </div>
+        {tasks.length === 0 ? (
+          <Empty>Takıma henüz görev atanmadı.</Empty>
+        ) : (
+          <div className="space-y-3">
+            {open.length > 0 && (
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-navy-700">Bekleyen ({open.length})</h3>
+                <div className="card divide-y divide-navy-100">{open.map(taskRow)}</div>
+              </div>
+            )}
+            {completed.length > 0 && (
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-navy-700">Tamamlanan ({completed.length})</h3>
+                <div className="card divide-y divide-navy-100">{completed.map(taskRow)}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       <section>
         <h2 className="mb-3 text-base font-bold text-navy-900">Girilen haftalık raporlar</h2>

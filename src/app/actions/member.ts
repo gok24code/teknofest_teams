@@ -20,7 +20,7 @@ export async function memberReportTask(input: {
   try {
     await mutateDb((db) => {
       const w = db.teams.find((x) => x.id === team.id);
-      if (!w || w.archived || w.passwordVersion !== team.passwordVersion || !db.members.some((m) => m.id === member.id)) {
+      if (!w || w.archived || (w.memberPasswordVersion ?? 0) !== (team.memberPasswordVersion ?? 0) || !db.members.some((m) => m.id === member.id)) {
         throw new UserError("Oturumunuz geçersiz. Lütfen tekrar giriş yapın.");
       }
       reportTaskIn(db, member.id, {

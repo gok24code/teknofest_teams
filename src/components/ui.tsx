@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { pct } from "@/lib/stats";
-import { PRIORITY_LABELS, type Priority } from "@/lib/types";
 
 export function PageHeader({
   title,
@@ -82,13 +81,4 @@ export function StatusDot({ status }: { status?: "present" | "absent" | "excused
   } as const;
   const [color, label] = map[status];
   return <span title={label} aria-label={label} className={`inline-block h-3 w-3 rounded-full ${color}`} />;
-}
-
-export function PriorityBadge({ priority }: { priority: Priority }) {
-  const cls = {
-    high: "bg-red-100 text-red-700 ring-red-200",
-    medium: "bg-accent-300/40 text-accent-700 ring-accent-400/50",
-    low: "bg-navy-100 text-navy-800 ring-navy-100",
-  }[priority];
-  return <span className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ring-1 ${cls}`}>{PRIORITY_LABELS[priority]}</span>;
 }

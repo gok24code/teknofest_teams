@@ -3,15 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { FormState } from "@/lib/forms";
-import { TASK_STATUS_LABELS, taskStatus, type Priority } from "@/lib/types";
+import { TASK_STATUS_LABELS, taskStatus } from "@/lib/types";
 import { FormMessage } from "./forms";
-import { PriorityBadge } from "./ui";
 
 export interface ReportableTask {
   id: string;
   title: string;
   description?: string;
-  priority: Priority;
   progress: number;
   done: boolean;
   completionNote?: string;
@@ -46,12 +44,9 @@ export function TaskReporter({
 
   return (
     <div className="space-y-3 px-4 py-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="font-semibold">{task.title}</div>
-          <div className="text-xs text-navy-700/60">Atanma: {assignedLabel} · {TASK_STATUS_LABELS[status]}</div>
-        </div>
-        <PriorityBadge priority={task.priority} />
+      <div className="min-w-0">
+        <div className="font-semibold">{task.title}</div>
+        <div className="text-xs text-navy-700/60">Atanma: {assignedLabel} · {TASK_STATUS_LABELS[status]}</div>
       </div>
       {task.description && <p className="text-sm whitespace-pre-line text-navy-700/80">{task.description}</p>}
 

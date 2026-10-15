@@ -56,10 +56,10 @@ export async function memberLogin(_: FormState, fd: FormData): Promise<FormState
   const password = str(fd, "password", 200);
   const db = await readDb();
   const team = db.teams.find((w) => !w.archived && w.id === teamId);
-  const ok = await bcrypt.compare(password, team?.passwordHash ?? DUMMY_HASH);
+  const ok = await bcrypt.compare(password, team?.memberPasswordHash ?? DUMMY_HASH);
   const member = team && studentNo ? db.members.find((m) => m.teamId === team.id && m.studentNo === studentNo) : undefined;
 
-  if (!team || !member || !ok) {
+  if (!team || !team.memberPasswordHash || !member || !ok) {
     await recordFailure(key);
     return { error: "Takım, okul numarası veya şifre hatalı." };
   }

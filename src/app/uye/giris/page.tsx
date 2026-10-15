@@ -27,7 +27,7 @@ export default async function MemberLoginPage() {
           <div className="bg-accent-gradient h-1" />
           <div className="p-6">
             <h2 className="text-lg font-bold">Üye Girişi</h2>
-            <p className="mt-1 mb-5 text-sm text-navy-700/70">Takımınızı seçin, okul numaranızı ve takım şifrenizi girin.</p>
+            <p className="mt-1 mb-5 text-sm text-navy-700/70">Takımınızı seçin, okul numaranızı ve üye şifrenizi girin.</p>
             <ActionForm action={memberLogin} className="space-y-4">
               <div>
                 <label className="label" htmlFor="team">Takım</label>
@@ -45,7 +45,7 @@ export default async function MemberLoginPage() {
                 <input id="studentNo" name="studentNo" inputMode="numeric" className="input py-3 text-base" autoComplete="username" required maxLength={30} />
               </div>
               <div>
-                <label className="label" htmlFor="password">Takım şifresi</label>
+                <label className="label" htmlFor="password">Üye şifresi</label>
                 <input id="password" name="password" type="password" className="input py-3 text-base" autoComplete="current-password" required maxLength={200} />
               </div>
               <SubmitButton className="btn-accent w-full py-3 text-base" pendingText="Giriş yapılıyor…">Giriş yap</SubmitButton>

@@ -43,6 +43,10 @@ export interface Team {
   passwordHash: string;
   /** Şifre her değiştiğinde artar; eski kaptan oturumları geçersiz olur. */
   passwordVersion: number;
+  /** Üye girişi için takıma özel ortak şifrenin hash'i; tanımlı değilse üyeler giriş yapamaz. */
+  memberPasswordHash?: string;
+  /** Üye şifresi her değiştiğinde artar; eski üye oturumları geçersiz olur. */
+  memberPasswordVersion?: number;
   /** Bu sayıdan fazla devamsızlık yapan üye uyarı alır. */
   absenceLimit: number;
   archived: boolean;
@@ -63,13 +67,6 @@ export interface Session {
   updatedAt: string;
 }
 
-export const PRIORITIES = ["low", "medium", "high"] as const;
-export type Priority = (typeof PRIORITIES)[number];
-
-export const PRIORITY_LABELS: Record<Priority, string> = { low: "Düşük", medium: "Orta", high: "Yüksek" };
-
-export const isPriority = (v: unknown): v is Priority => typeof v === "string" && (PRIORITIES as readonly string[]).includes(v);
-
 /** Yönetimin bir üyeye atadığı görev. Toplu atamada her üye için ayrı kayıt oluşur. */
 export interface Task {
   id: string;
@@ -77,7 +74,6 @@ export interface Task {
   memberId: string;
   title: string;
   description?: string;
-  priority: Priority;
   /** Atama tarihi (ISO). */
   assignedAt: string;
   /** Üyenin bildirdiği tamamlanma yüzdesi (0-100). */

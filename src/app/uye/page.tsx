@@ -1,6 +1,6 @@
 import { memberReportTask } from "@/app/actions/member";
 import { TaskReporter } from "@/components/TaskReporter";
-import { Empty, PriorityBadge, RateBar, StatCard } from "@/components/ui";
+import { Empty, RateBar, StatCard } from "@/components/ui";
 import { requireMember } from "@/lib/auth";
 import { formatDate, memberStats, pct, sessionsOf, taskSummary, tasksOfMember } from "@/lib/stats";
 import { UNIT_LABELS } from "@/lib/types";
@@ -59,7 +59,6 @@ export default async function MemberHome() {
                       Atanma: {formatDate(t.assignedAt)}{t.completedAt ? ` · Tamamlanma: ${formatDate(t.completedAt)}` : ""}
                     </div>
                   </div>
-                  <PriorityBadge priority={t.priority} />
                 </summary>
                 <div className="mt-3 space-y-1 text-sm text-navy-700/80">
                   {t.description && <p className="whitespace-pre-line">{t.description}</p>}
