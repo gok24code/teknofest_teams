@@ -63,9 +63,15 @@ async function mutate<T, R>(
 
 const DB_KEY = "tts/db.json";
 
-export const readDb = async (): Promise<Database> => (await load(DB_KEY, emptyDatabase)).data;
+/** Eski sürümde kaydedilmiş veritabanına sonradan eklenen alanları tamamlar. */
+const withDefaults = (db: Database): Database => {
+  db.tasks ??= [];
+  return db;
+};
 
-export const mutateDb = <R>(fn: (db: Database) => R) => mutate(DB_KEY, emptyDatabase, fn);
+export const readDb = async (): Promise<Database> => withDefaults((await load(DB_KEY, emptyDatabase)).data);
+
+export const mutateDb = <R>(fn: (db: Database) => R) => mutate(DB_KEY, emptyDatabase, fn, withDefaults);
 
 /* ---- Admin oturumları ---- */
 

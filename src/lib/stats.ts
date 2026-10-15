@@ -1,4 +1,4 @@
-import { UNIT_LABELS, type Database, type Member, type Session, type Team, type Unit } from "./types";
+import { UNIT_LABELS, type Database, type Member, type Session, type Task, type Team, type Unit } from "./types";
 
 export interface MemberStats {
   present: number;
@@ -144,4 +144,45 @@ export function unitGroups(members: Member[]): UnitGroup[] {
   return order
     .map((unit) => ({ unit, label: UNIT_LABELS[unit], members: members.filter((m) => m.unit === unit) }))
     .filter((g) => g.members.length > 0);
+}
+
+export interface TaskSummary {
+  total: number;
+  pending: number;
+  inProgress: number;
+  done: number;
+  /** Ortalama tamamlanma (0-1); görev yoksa 0. */
+  progress: number;
+}
+
+export function taskSummary(tasks: Task[]): TaskSummary {
+  let done = 0;
+  let inProgress = 0;
+  let sum = 0;
+  for (const t of tasks) {
+    sum += t.progress;
+    if (t.done) done++;
+    else if (t.progress > 0) inProgress++;
+  }
+  return {
+    total: tasks.length,
+    pending: tasks.length - done - inProgress,
+    inProgress,
+    done,
+    progress: tasks.length ? sum / tasks.length / 100 : 0,
+  };
+}
+
+/** Üyenin görevleri: önce tamamlanmayanlar (yüksek öncelik üstte), sonra tamamlananlar (en yeni üstte). */
+export function tasksOfMember(db: Database, memberId: string): Task[] {
+  const rank = { high: 0, medium: 1, low: 2 } as const;
+  return db.tasks
+    .filter((t) => t.memberId === memberId)
+    .sort((a, b) =>
+      a.done !== b.done
+        ? Number(a.done) - Number(b.done)
+        : a.done
+          ? (b.completedAt ?? "").localeCompare(a.completedAt ?? "")
+          : rank[a.priority] - rank[b.priority] || b.assignedAt.localeCompare(a.assignedAt),
+    );
 }

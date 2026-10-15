@@ -4,7 +4,7 @@ import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getOrCreateSigningSecret, mutateAdminSessions, newId, now, readAdminSessions, readDb } from "./db";
-import type { Team } from "./types";
+import type { Member, Team } from "./types";
 
 /* ------------------------------------------------------------------ */
 /* Ortak                                                               */
@@ -13,9 +13,11 @@ import type { Team } from "./types";
 const ISSUER = "tts";
 const ADMIN_AUD = "tts-admin";
 const CAPTAIN_AUD = "tts-captain";
+const MEMBER_AUD = "tts-member";
 
 const ADMIN_COOKIE = "tts_admin";
 const CAPTAIN_COOKIE = "tts_kaptan";
+const MEMBER_COOKIE = "tts_uye";
 
 /** Tarayıcıların izin verdiği en uzun çerez ömrü (400 gün). */
 const CAPTAIN_COOKIE_MAX_AGE = 400 * 24 * 60 * 60;
@@ -174,4 +176,46 @@ export async function requireCaptain() {
 
 export async function destroyCaptainSession(): Promise<void> {
   (await cookies()).delete(CAPTAIN_COOKIE);
+}
+
+/* ------------------------------------------------------------------ */
+/* Üye: takım şifresiyle girilir; şifre değişince geçersiz olur       */
+/* ------------------------------------------------------------------ */
+
+export async function createMemberSession(member: Member, team: Team): Promise<void> {
+  const token = await new SignJWT({ mid: member.id, v: team.passwordVersion })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuer(ISSUER)
+    .setAudience(MEMBER_AUD)
+    .setIssuedAt()
+    .sign(await secretKey());
+
+  (await cookies()).set(MEMBER_COOKIE, token, {
+    httpOnly: true,
+    secure: secure(),
+    sameSite: "lax",
+    path: "/",
+    maxAge: CAPTAIN_COOKIE_MAX_AGE,
+  });
+}
+
+/** Üye oturumunun bağlı olduğu üyeyi ve takımı döner; geçersizse `null`. */
+export async function getMember() {
+  const payload = await verify((await cookies()).get(MEMBER_COOKIE)?.value, MEMBER_AUD);
+  if (!payload || typeof payload.mid !== "string" || typeof payload.v !== "number") return null;
+  const db = await readDb();
+  const member = db.members.find((m) => m.id === payload.mid);
+  const team = member && db.teams.find((w) => w.id === member.teamId);
+  if (!member || !team || team.archived || team.passwordVersion !== payload.v) return null;
+  return { member, team, db };
+}
+
+export async function requireMember() {
+  const result = await getMember();
+  if (!result) redirect("/uye/giris");
+  return result;
+}
+
+export async function destroyMemberSession(): Promise<void> {
+  (await cookies()).delete(MEMBER_COOKIE);
 }

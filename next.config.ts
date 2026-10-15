@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: securityHeaders },
       // Kişisel veri içeren sayfaların tarayıcı/proxy önbelleğinde tutulmaması için
-      { source: "/(admin|kaptan)/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
+      { source: "/(admin|kaptan|uye)/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
     ];
   },
 };

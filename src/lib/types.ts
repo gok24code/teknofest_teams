@@ -63,14 +63,46 @@ export interface Session {
   updatedAt: string;
 }
 
+export const PRIORITIES = ["low", "medium", "high"] as const;
+export type Priority = (typeof PRIORITIES)[number];
+
+export const PRIORITY_LABELS: Record<Priority, string> = { low: "Düşük", medium: "Orta", high: "Yüksek" };
+
+export const isPriority = (v: unknown): v is Priority => typeof v === "string" && (PRIORITIES as readonly string[]).includes(v);
+
+/** Yönetimin bir üyeye atadığı görev. Toplu atamada her üye için ayrı kayıt oluşur. */
+export interface Task {
+  id: string;
+  teamId: string;
+  memberId: string;
+  title: string;
+  description?: string;
+  priority: Priority;
+  /** Atama tarihi (ISO). */
+  assignedAt: string;
+  /** Üyenin bildirdiği tamamlanma yüzdesi (0-100). */
+  progress: number;
+  done: boolean;
+  completionNote?: string;
+  completedAt?: string;
+  updatedAt: string;
+}
+
+export type TaskStatus = "pending" | "progress" | "done";
+
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = { pending: "Bekliyor", progress: "Devam ediyor", done: "Tamamlandı" };
+
+export const taskStatus = (t: Pick<Task, "done" | "progress">): TaskStatus => (t.done ? "done" : t.progress > 0 ? "progress" : "pending");
+
 export interface Database {
   version: 1;
   members: Member[];
   teams: Team[];
   sessions: Session[];
+  tasks: Task[];
 }
 
-export const emptyDatabase = (): Database => ({ version: 1, members: [], teams: [], sessions: [] });
+export const emptyDatabase = (): Database => ({ version: 1, members: [], teams: [], sessions: [], tasks: [] });
 
 export interface AdminSession {
   id: string;

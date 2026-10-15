@@ -1,7 +1,7 @@
 import { getAdminSessionId } from "@/lib/auth";
 import { readDb } from "@/lib/db";
 import { UNIT_LABELS } from "@/lib/types";
-import { formatDate, sessionsOf, membersOf, memberStats } from "@/lib/stats";
+import { formatDate, sessionsOf, membersOf, memberStats, taskSummary } from "@/lib/stats";
 
 const LABEL = { present: "Geldi", absent: "Gelmedi", excused: "İzinli" } as const;
 
@@ -20,7 +20,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   if (!team) return new Response("Bulunamadı", { status: 404 });
 
   const sessions = sessionsOf(db, id);
-  const header = ["Ad Soyad", "Öğrenci No", "E-posta", "Telefon", "Bölüm", "Birim", "Görev", ...sessions.map((s) => `${s.week}. hafta (${formatDate(s.date)})`), "Devamsızlık", "İzinli"];
+  const header = ["Ad Soyad", "Öğrenci No", "E-posta", "Telefon", "Bölüm", "Birim", "Görev", ...sessions.map((s) => `${s.week}. hafta (${formatDate(s.date)})`), "Devamsızlık", "İzinli", "Görev (tamamlanan/toplam)", "Görev ilerleme"];
   const lines = [header.map(cell).join(";")];
   for (const st of membersOf(db, team.id)) {
     const stats = memberStats(sessions, st.id);
@@ -29,7 +29,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       const note = s.notes?.[st.id];
       return v ? (note ? `${LABEL[v]}: ${note}` : LABEL[v]) : note ?? "";
     });
-    lines.push([st.fullName, st.studentNo, st.email, st.phone, st.department, UNIT_LABELS[st.unit], st.duty, ...marks, stats.absent, stats.excused].map(cell).join(";"));
+    const ts = taskSummary(db.tasks.filter((t) => t.memberId === st.id));
+    lines.push([st.fullName, st.studentNo, st.email, st.phone, st.department, UNIT_LABELS[st.unit], st.duty, ...marks, stats.absent, stats.excused, `${ts.done}/${ts.total}`, ts.total ? `%${Math.round(ts.progress * 100)}` : ""].map(cell).join(";"));
   }
 
   const filename = `${team.title.replace(/[^\p{L}\p{N}]+/gu, "_")}_rapor.csv`;

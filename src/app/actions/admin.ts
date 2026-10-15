@@ -8,22 +8,27 @@ import { mutateAdminSessions, mutateDb, newId, now } from "@/lib/db";
 import { int, str, type FormState } from "@/lib/forms";
 import {
   addMembers,
+  assignTasksIn,
   findDuplicate,
   generatePassword,
   normalizeName,
   parseMembersJson,
   removeMember,
+  removeTaskIn,
   removeTeam,
   saveSessionIn,
+  updateTaskIn,
   UserError,
   validateMember,
   type SaveSessionInput,
+  type TaskTarget,
 } from "@/lib/mutations";
 import type { Database } from "@/lib/types";
 
 function revalidateAll() {
   revalidatePath("/admin", "layout");
   revalidatePath("/kaptan", "layout");
+  revalidatePath("/uye", "layout");
 }
 
 async function run(fn: () => Promise<FormState | string | void>): Promise<FormState> {
@@ -198,6 +203,47 @@ export async function adminDeleteSession(fd: FormData): Promise<void> {
   });
   revalidateAll();
   redirect(`/admin/takimlar/${encodeURIComponent(teamId)}`);
+}
+
+/* -------------------------------- Görevler -------------------------------- */
+
+/** `target` alanı: "all", "team:<id>" veya "member:<id>". */
+function parseTarget(raw: string): TaskTarget {
+  if (raw === "all") return { kind: "all" };
+  const [kind, id] = raw.split(":");
+  if (kind === "team" && id) return { kind: "team", teamId: id };
+  if (kind === "member" && id) return { kind: "member", memberId: id };
+  throw new UserError("Görevin atanacağı kişiyi veya takımı seçin.");
+}
+
+const taskFields = (fd: FormData) => ({
+  title: str(fd, "title", 150),
+  description: str(fd, "description", 1000),
+  priority: str(fd, "priority", 10),
+});
+
+export async function assignTasks(_: FormState, fd: FormData): Promise<FormState> {
+  return run(async () => {
+    const target = parseTarget(str(fd, "target", 100));
+    const input = taskFields(fd);
+    const count = await mutateDb((db) => assignTasksIn(db, target, input));
+    return `Görev ${count} üyeye atandı.`;
+  });
+}
+
+export async function updateTask(_: FormState, fd: FormData): Promise<FormState> {
+  return run(async () => {
+    const id = str(fd, "id");
+    const input = taskFields(fd);
+    await mutateDb((db) => updateTaskIn(db, id, input));
+  });
+}
+
+export async function deleteTask(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  await mutateDb((db) => removeTaskIn(db, id));
+  revalidateAll();
 }
 
 /* ---------------------------- Admin oturumları ---------------------------- */

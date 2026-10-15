@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import { deleteMember, updateMember } from "@/app/actions/admin";
+import { AdminTaskItem, TaskAssignForm } from "@/components/AdminTasks";
 import { ActionForm, ConfirmForm, SubmitButton } from "@/components/forms";
 import { AbsenceBadge, PageHeader, RateBar, StatCard, StatusDot } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { readDb } from "@/lib/db";
-import { formatDate, memberStats, pct, sessionsOf } from "@/lib/stats";
+import { formatDate, memberStats, pct, sessionsOf, taskSummary, tasksOfMember } from "@/lib/stats";
 import { UNITS, UNIT_LABELS } from "@/lib/types";
 
 export default async function MemberPage({ params }: { params: Promise<{ id: string; pid: string }> }) {
@@ -16,6 +17,8 @@ export default async function MemberPage({ params }: { params: Promise<{ id: str
   if (!team || !p) notFound();
   const sessions = sessionsOf(db, id);
   const stats = memberStats(sessions, p.id);
+  const tasks = tasksOfMember(db, p.id);
+  const ts = taskSummary(tasks);
 
   const fields = [
     { name: "fullName", label: "Ad soyad *", value: p.fullName, required: true, max: 100 },
@@ -43,6 +46,33 @@ export default async function MemberPage({ params }: { params: Promise<{ id: str
       <div className="card mb-8 p-5">
         <h2 className="mb-1 text-lg font-bold">Uygulama planındaki görevi</h2>
         <p className="text-sm text-navy-700/80">{p.duty || <span className="italic text-navy-700/40">Görev girilmemiş</span>}</p>
+      </div>
+
+      <div className="card mb-8 p-5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">Görevler</h2>
+          <span className="text-sm text-navy-700/70">
+            {ts.pending} bekleyen · {ts.inProgress} devam eden · {ts.done} tamamlanan · ortalama {pct(ts.progress)}
+          </span>
+        </div>
+        {tasks.length === 0 ? (
+          <p className="mb-4 text-sm text-navy-700/60">Bu üyeye henüz görev atanmadı.</p>
+        ) : (
+          <ul className="mb-4 divide-y divide-navy-100">
+            {tasks.map((t) => (
+              <AdminTaskItem key={t.id} task={t} />
+            ))}
+          </ul>
+        )}
+        <details>
+          <summary className="cursor-pointer text-sm font-semibold text-accent-700">Yeni görev ata</summary>
+          <div className="mt-4"><TaskAssignForm fixedTarget={`member:${p.id}`} /></div>
+        </details>
+        {!p.studentNo && (
+          <p className="mt-4 rounded-lg border border-accent-400 bg-accent-300/20 px-3 py-2 text-sm">
+            Öğrenci numarası girilmemiş; üye panele giriş yapabilmek için numara gereklidir.
+          </p>
+        )}
       </div>
 
       <div className="card mb-8 p-5">

@@ -1,7 +1,7 @@
 import "server-only";
 import { randomInt } from "crypto";
 import { newId, now } from "./db";
-import { isUnit, type AttendanceStatus, type Database, type SaveSessionInput, type Unit } from "./types";
+import { isPriority, isUnit, type AttendanceStatus, type Database, type Priority, type SaveSessionInput, type Task, type Unit } from "./types";
 
 export type { SaveSessionInput };
 
@@ -132,6 +132,7 @@ export function removeTeam(db: Database, teamId: string) {
   db.teams = db.teams.filter((w) => w.id !== teamId);
   db.members = db.members.filter((p) => p.teamId !== teamId);
   db.sessions = db.sessions.filter((s) => s.teamId !== teamId);
+  db.tasks = db.tasks.filter((t) => t.teamId !== teamId);
 }
 
 /** Üyeyi ve rapor kayıtlarını siler. */
@@ -139,6 +140,7 @@ export function removeMember(db: Database, memberId: string) {
   const p = db.members.find((x) => x.id === memberId);
   if (!p) return;
   db.members = db.members.filter((x) => x.id !== memberId);
+  db.tasks = db.tasks.filter((t) => t.memberId !== memberId);
   for (const s of db.sessions) {
     if (s.teamId !== p.teamId) continue;
     delete s.attendance[memberId];
@@ -192,4 +194,79 @@ export function generatePassword(length = 10): string {
   let out = "";
   for (let i = 0; i < length; i++) out += alphabet[randomInt(alphabet.length)];
   return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Görevler                                                            */
+/* ------------------------------------------------------------------ */
+
+export interface TaskInput {
+  title: string;
+  description?: string;
+  priority: string;
+}
+
+export type TaskTarget = { kind: "member"; memberId: string } | { kind: "team"; teamId: string } | { kind: "all" };
+
+function validateTask(input: TaskInput): { title: string; description?: string; priority: Priority } {
+  const title = String(input.title ?? "").trim();
+  const description = String(input.description ?? "").trim();
+  if (!title) throw new UserError("Görev başlığı gerekli.");
+  if (title.length > 150) throw new UserError("Görev başlığı en fazla 150 karakter olabilir.");
+  if (description.length > 1000) throw new UserError("Açıklama en fazla 1000 karakter olabilir.");
+  if (!isPriority(input.priority)) throw new UserError("Geçerli bir öncelik seçin.");
+  return { title, description: description || undefined, priority: input.priority };
+}
+
+/** Hedef kapsamdaki (arşivlenmemiş takımlardaki) üyelere birer görev atar; atanan sayısını döner. */
+export function assignTasksIn(db: Database, target: TaskTarget, input: TaskInput): number {
+  const v = validateTask(input);
+  const activeTeams = new Set(db.teams.filter((t) => !t.archived).map((t) => t.id));
+  let members = db.members.filter((m) => activeTeams.has(m.teamId));
+  if (target.kind === "member") {
+    members = members.filter((m) => m.id === target.memberId);
+  } else if (target.kind === "team") {
+    members = members.filter((m) => m.teamId === target.teamId);
+  }
+  if (members.length === 0) throw new UserError("Görev atanacak üye bulunamadı.");
+  const t = now();
+  for (const m of members) {
+    db.tasks.push({ id: newId(), teamId: m.teamId, memberId: m.id, ...v, assignedAt: t, progress: 0, done: false, updatedAt: t });
+  }
+  return members.length;
+}
+
+export function updateTaskIn(db: Database, taskId: string, input: TaskInput) {
+  const task = db.tasks.find((x) => x.id === taskId);
+  if (!task) throw new UserError("Görev bulunamadı.");
+  Object.assign(task, validateTask(input), { updatedAt: now() });
+}
+
+export function removeTaskIn(db: Database, taskId: string) {
+  db.tasks = db.tasks.filter((x) => x.id !== taskId);
+}
+
+/** Üyenin kendi görevine ilişkin bildirimi: yüzde, tamamlandı bilgisi ve not. */
+export function reportTaskIn(
+  db: Database,
+  memberId: string,
+  input: { taskId: string; progress: number; done: boolean; note?: string },
+): Task {
+  const task = db.tasks.find((x) => x.id === input.taskId && x.memberId === memberId);
+  if (!task) throw new UserError("Görev bulunamadı.");
+  const raw = Math.round(Number(input.progress));
+  if (!Number.isFinite(raw)) throw new UserError("Geçerli bir yüzde girin.");
+  const note = String(input.note ?? "").trim();
+  if (note.length > 500) throw new UserError("Not en fazla 500 karakter olabilir.");
+  let progress = Math.min(100, Math.max(0, raw));
+  const done = input.done === true || progress === 100;
+  if (done) progress = 100;
+  const t = now();
+  task.progress = progress;
+  if (done && !task.done) task.completedAt = t;
+  if (!done) task.completedAt = undefined;
+  task.done = done;
+  task.completionNote = note || undefined;
+  task.updatedAt = t;
+  return task;
 }

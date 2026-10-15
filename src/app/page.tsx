@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { captainLogin } from "@/app/actions/auth";
 import { ActionForm, SubmitButton } from "@/components/forms";
@@ -45,6 +46,9 @@ export default async function CaptainLoginPage() {
               </div>
               <SubmitButton className="btn-accent w-full py-3 text-base" pendingText="Giriş yapılıyor…">Giriş yap</SubmitButton>
             </ActionForm>
+            <p className="mt-4 text-center text-sm text-navy-700/70">
+              Takım üyesi misiniz? <Link href="/uye/giris" className="font-semibold text-accent-700 hover:underline">Üye girişi</Link>
+            </p>
           </div>
         </div>
       </main>
