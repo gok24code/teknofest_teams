@@ -51,7 +51,7 @@ export default async function NewTeamPage() {
 
         <div className="card p-5">
           <h2 className="mb-4 text-lg font-bold">2. Üyeler</h2>
-          <MembersInput required initialRows={3} />
+          <MembersInput initialRows={3} />
         </div>
 
         <SubmitButton className="btn-accent w-full py-3 text-base">Takımı oluştur</SubmitButton>

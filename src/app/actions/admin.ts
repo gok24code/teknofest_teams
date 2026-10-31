@@ -69,7 +69,6 @@ export async function createTeam(_: FormState, fd: FormData): Promise<FormState>
     if (!title) throw new UserError("Takım adı zorunludur.");
     const { rows, errors } = parseMembersJson(str(fd, "members", 500_000));
     if (errors.length) throw new UserError(`Üye listesinde hata var — ${errors.slice(0, 5).join(" · ")}`);
-    if (!rows.length) throw new UserError("Takımı açarken en az bir üye girin.");
     const password = passwordFrom(fd);
     const passwordHash = await bcrypt.hash(password, 12);
     const id = newId();
@@ -92,7 +91,7 @@ export async function createTeam(_: FormState, fd: FormData): Promise<FormState>
     });
     const dup = skipped.length ? ` (${skipped.length} tekrar eden satır atlandı)` : "";
     return {
-      ok: `“${title}” ${added} üyeyle oluşturuldu${dup}. Kaptan girişi için şifre aşağıda; bu şifre bir daha gösterilmeyecek.`,
+      ok: `“${title}” ${added ? `${added} üyeyle ` : ""}oluşturuldu${dup}. Kaptan girişi için şifre aşağıda; bu şifre bir daha gösterilmeyecek.`,
       secret: password,
     };
   });
