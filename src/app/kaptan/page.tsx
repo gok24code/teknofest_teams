@@ -115,7 +115,7 @@ export default async function CaptainHome() {
       <section>
         <h2 className="mb-3 text-base font-bold text-navy-900">Üyeler, birimler ve devamsızlık</h2>
         {students.length === 0 ? (
-          <Empty>Bu takıma henüz üye tanımlanmadı. Yönetimle iletişime geçin.</Empty>
+          <Empty>Bu takıma henüz üye eklenmedi.</Empty>
         ) : (
           <div className="card divide-y divide-navy-100">
             {students.map((s) => {
@@ -135,6 +135,9 @@ export default async function CaptainHome() {
             })}
           </div>
         )}
+        <Link href="/kaptan/uyeler" className="mt-3 inline-block text-sm font-semibold text-accent-700 hover:underline">
+          Üyeleri düzenle →
+        </Link>
       </section>
     </div>
   );

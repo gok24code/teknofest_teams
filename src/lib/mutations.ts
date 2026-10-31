@@ -1,6 +1,7 @@
 import "server-only";
 import { randomInt } from "crypto";
 import { newId, now } from "./db";
+import { str } from "./forms";
 import { isUnit, type AttendanceStatus, type Database, type SaveSessionInput, type Task, type Unit } from "./types";
 
 export type { SaveSessionInput };
@@ -108,6 +109,27 @@ export function findDuplicate(db: Database, teamId: string, p: MemberInput, exce
       x.id !== exceptId &&
       (p.studentNo && x.studentNo ? x.studentNo === p.studentNo : sameName(x.fullName, p.fullName)),
   );
+}
+
+/** Üye düzenleme formundaki alanları okuyup doğrular. */
+export function memberFromForm(fd: FormData): ValidMember {
+  return validateMember({
+    fullName: str(fd, "fullName", 100),
+    studentNo: str(fd, "studentNo", 30),
+    email: str(fd, "email", 120),
+    phone: str(fd, "phone", 30),
+    department: str(fd, "department", 100),
+    unit: str(fd, "unit", 20),
+    duty: str(fd, "duty", 500),
+  });
+}
+
+/** Üyenin bilgilerini günceller; `teamId` verilirse üye o takımda olmalıdır. */
+export function updateMemberIn(db: Database, memberId: string, data: ValidMember, teamId?: string) {
+  const p = db.members.find((x) => x.id === memberId && (!teamId || x.teamId === teamId));
+  if (!p) throw new UserError("Üye bulunamadı.");
+  if (findDuplicate(db, p.teamId, data, memberId)) throw new UserError("Bu takımda aynı kişi zaten kayıtlı.");
+  Object.assign(p, { studentNo: undefined, email: undefined, phone: undefined, department: undefined, duty: undefined }, data);
 }
 
 /** Üyeleri takıma ekler; aynı kişi zaten varsa atlar. */

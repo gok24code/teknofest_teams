@@ -16,7 +16,10 @@ export default async function NewWeekPage() {
       <h1 className="mb-1 text-2xl font-bold">Haftalık rapor gir</h1>
       <p className="mb-5 text-sm text-navy-700/70">Her üye için toplantıya katılımı seçin ve bu hafta yaptığı işi kısaca yazın. Danışman hocanız bu bilgileri görüntüler.</p>
       {students.length === 0 ? (
-        <Empty>Bu takıma henüz üye tanımlanmadı. Yönetimle iletişime geçin.</Empty>
+        <Empty>
+          Bu takıma henüz üye eklenmedi.{" "}
+          <Link href="/kaptan/uyeler" className="font-semibold text-accent-700 hover:underline">Üye ekle</Link>
+        </Empty>
       ) : (
         <AttendanceTaker
           teamId={team.id}

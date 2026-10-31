@@ -9,17 +9,17 @@ import { int, str, type FormState } from "@/lib/forms";
 import {
   addMembers,
   assignTasksIn,
-  findDuplicate,
   generatePassword,
+  memberFromForm,
   normalizeName,
   parseMembersJson,
   removeMember,
   removeTaskIn,
   removeTeam,
   saveSessionIn,
+  updateMemberIn,
   updateTaskIn,
   UserError,
-  validateMember,
   type SaveSessionInput,
   type TaskTarget,
 } from "@/lib/mutations";
@@ -173,21 +173,8 @@ export async function addMembersToTeam(_: FormState, fd: FormData): Promise<Form
 export async function updateMember(_: FormState, fd: FormData): Promise<FormState> {
   return run(async () => {
     const id = str(fd, "id");
-    const data = validateMember({
-      fullName: str(fd, "fullName", 100),
-      studentNo: str(fd, "studentNo", 30),
-      email: str(fd, "email", 120),
-      phone: str(fd, "phone", 30),
-      department: str(fd, "department", 100),
-      unit: str(fd, "unit", 20),
-      duty: str(fd, "duty", 500),
-    });
-    await mutateDb((db) => {
-      const p = db.members.find((x) => x.id === id);
-      if (!p) throw new UserError("Üye bulunamadı.");
-      if (findDuplicate(db, p.teamId, data, id)) throw new UserError("Bu takımda aynı kişi zaten kayıtlı.");
-      Object.assign(p, { studentNo: undefined, email: undefined, phone: undefined, department: undefined, duty: undefined }, data);
-    });
+    const data = memberFromForm(fd);
+    await mutateDb((db) => updateMemberIn(db, id, data));
   });
 }
 

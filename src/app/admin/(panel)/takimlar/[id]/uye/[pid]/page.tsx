@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import { deleteMember, updateMember } from "@/app/actions/admin";
 import { AdminTaskItem, TaskAssignForm } from "@/components/AdminTasks";
-import { ActionForm, ConfirmForm, SubmitButton } from "@/components/forms";
+import { ConfirmForm } from "@/components/forms";
+import { MemberEditForm } from "@/components/MemberEditForm";
 import { AbsenceBadge, PageHeader, RateBar, StatCard, StatusDot } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { readDb } from "@/lib/db";
 import { formatDate, memberStats, pct, sessionsOf, taskSummary, tasksOfMember } from "@/lib/stats";
-import { UNITS, UNIT_LABELS } from "@/lib/types";
+import { UNIT_LABELS } from "@/lib/types";
 
 export default async function MemberPage({ params }: { params: Promise<{ id: string; pid: string }> }) {
   await requireAdmin();
@@ -19,14 +20,6 @@ export default async function MemberPage({ params }: { params: Promise<{ id: str
   const stats = memberStats(sessions, p.id);
   const tasks = tasksOfMember(db, p.id);
   const ts = taskSummary(tasks);
-
-  const fields = [
-    { name: "fullName", label: "Ad soyad *", value: p.fullName, required: true, max: 100 },
-    { name: "studentNo", label: "Öğrenci no", value: p.studentNo, max: 30 },
-    { name: "email", label: "E-posta", value: p.email, type: "email", max: 120 },
-    { name: "phone", label: "Telefon", value: p.phone, type: "tel", max: 30 },
-    { name: "department", label: "Bölüm", value: p.department, max: 100 },
-  ];
 
   return (
     <>
@@ -104,28 +97,7 @@ export default async function MemberPage({ params }: { params: Promise<{ id: str
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="card p-5">
           <h2 className="mb-4 text-lg font-bold">Bilgileri düzenle</h2>
-          <ActionForm action={updateMember} className="grid gap-4 sm:grid-cols-2">
-            <input type="hidden" name="id" value={p.id} />
-            {fields.map((f) => (
-              <div key={f.name}>
-                <label className="label" htmlFor={f.name}>{f.label}</label>
-                <input id={f.name} name={f.name} type={f.type ?? "text"} defaultValue={f.value} required={f.required} maxLength={f.max} className="input" />
-              </div>
-            ))}
-            <div>
-              <label className="label" htmlFor="unit">Birim *</label>
-              <select id="unit" name="unit" defaultValue={p.unit} required className="input">
-                {UNITS.map((u) => (
-                  <option key={u} value={u}>{UNIT_LABELS[u]}</option>
-                ))}
-              </select>
-            </div>
-            <div className="sm:col-span-2">
-              <label className="label" htmlFor="duty">Uygulama planındaki görevi</label>
-              <textarea id="duty" name="duty" rows={3} maxLength={500} defaultValue={p.duty} className="input" />
-            </div>
-            <div className="sm:col-span-2"><SubmitButton>Kaydet</SubmitButton></div>
-          </ActionForm>
+          <MemberEditForm member={p} action={updateMember} />
         </div>
         <div className="card h-fit p-5">
           <h2 className="mb-1 text-lg font-bold text-red-700">Üyeyi sil</h2>
